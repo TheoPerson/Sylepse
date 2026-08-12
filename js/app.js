@@ -83,6 +83,7 @@ const App = (() => {
       if (aircraft.length > 0) {
         saveAircraftToHistory(aircraft);
         UI.renderResults(aircraft, source, radiusToUse);
+        if (typeof SoundEngine !== 'undefined') SoundEngine.playRadarPing();
       } else {
         UI.renderEmpty(radiusToUse);
       }

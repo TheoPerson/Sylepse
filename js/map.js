@@ -1,5 +1,5 @@
-// map.js — Carte Radar Sombre intégrée (Leaflet + CartoDB Dark Matter)
-// Module SkyMap pour Sylepse V4
+// map.js — Carte Radar Sombre intégrée avec Trajectoires Vectorielles Projetées
+// Module SkyMap pour Sylepse V5
 
 const SkyMap = (() => {
   'use strict';
@@ -8,6 +8,7 @@ const SkyMap = (() => {
   let userMarker = null;
   let radiusCircle = null;
   let aircraftMarkers = {};
+  let trajectoryLines = {};
   let targetMarker = null;
   let onAircraftSelectCallback = null;
 
@@ -21,6 +22,7 @@ const SkyMap = (() => {
       map.remove();
       map = null;
       aircraftMarkers = {};
+      trajectoryLines = {};
       targetMarker = null;
     }
 
@@ -60,15 +62,33 @@ const SkyMap = (() => {
     }, 250);
   }
 
+  function getDestinationLatLon(lat, lon, bearingDeg, distanceKm = 12) {
+    const R = 6371;
+    const brng = bearingDeg * Math.PI / 180;
+    const lat1 = lat * Math.PI / 180;
+    const lon1 = lon * Math.PI / 180;
+
+    const lat2 = Math.asin(Math.sin(lat1) * Math.cos(distanceKm / R) +
+      Math.cos(lat1) * Math.sin(distanceKm / R) * Math.cos(brng));
+
+    const lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(distanceKm / R) * Math.cos(lat1),
+      Math.cos(distanceKm / R) - Math.sin(lat1) * Math.sin(lat2));
+
+    return [lat2 * 180 / Math.PI, lon2 * 180 / Math.PI];
+  }
+
   function updateAircraft(aircraftList) {
     if (!map) return;
 
     const currentHexes = new Set(aircraftList.map(a => a.icao24));
 
+    // Supprimer les anciens marqueurs et lignes de trajectoire
     Object.keys(aircraftMarkers).forEach(hex => {
       if (!currentHexes.has(hex)) {
-        map.removeLayer(aircraftMarkers[hex]);
+        if (aircraftMarkers[hex]) map.removeLayer(aircraftMarkers[hex]);
+        if (trajectoryLines[hex]) map.removeLayer(trajectoryLines[hex]);
         delete aircraftMarkers[hex];
+        delete trajectoryLines[hex];
       }
     });
 
@@ -94,6 +114,22 @@ const SkyMap = (() => {
         iconSize: [30, 30],
         iconAnchor: [15, 15]
       });
+
+      // Ligne vectorielle de trajectoire projetée
+      const destCoords = getDestinationLatLon(ac.lat, ac.lon, trackDeg, 12);
+      const polyCoords = [[ac.lat, ac.lon], destCoords];
+
+      if (trajectoryLines[ac.icao24]) {
+        trajectoryLines[ac.icao24].setLatLngs(polyCoords);
+      } else {
+        const line = L.polyline(polyCoords, {
+          color: markerColor,
+          weight: 1.5,
+          opacity: 0.6,
+          dashArray: '3, 6'
+        }).addTo(map);
+        trajectoryLines[ac.icao24] = line;
+      }
 
       if (aircraftMarkers[ac.icao24]) {
         aircraftMarkers[ac.icao24].setLatLng([ac.lat, ac.lon]);
