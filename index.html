@@ -304,13 +304,12 @@ body::before {
 .sc-detail-actions { display: flex; flex-direction: column; gap: 8px; }
 
 /* ═══════════════════════════════════════════
-   MODAL STACKING CONTEXT — High Z-Index Lock & Deep Backdrop
+   MODAL STACKING CONTEXT — 100% Solid Backdrop & Full Screen Detail Sheet
    ═══════════════════════════════════════════ */
 
 .sc-sheet-backdrop {
   position: fixed; inset: 0;
-  background: rgba(7, 8, 10, 0.92);
-  -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
+  background: #07080a;
   opacity: 0; pointer-events: none; transition: opacity 0.3s var(--ease);
   z-index: 1999;
 }
@@ -318,14 +317,20 @@ body::before {
 
 .sc-sheet {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%);
-  width: 100%; max-width: 480px; background: #0e1014;
-  border: 1px solid rgba(255,255,255,0.12); border-top-left-radius: 24px; border-top-right-radius: 24px;
-  padding: 12px 20px 24px; transition: transform 0.35s var(--ease);
+  width: 100%; max-width: 480px; background: #07080a;
+  border: none;
+  padding: 12px 20px 32px; transition: transform 0.35s var(--ease);
   z-index: 2000;
-  max-height: 90vh; display: flex; flex-direction: column;
+  max-height: 92vh; display: flex; flex-direction: column;
   box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.9);
 }
 .sc-sheet.is-open { transform: translateX(-50%) translateY(0); }
+
+.sc-sheet-detail {
+  top: 0; max-height: 100vh; height: 100vh; height: 100dvh;
+  padding-top: max(16px, env(safe-area-inset-top));
+  border-radius: 0 !important;
+}
 
 .sc-sheet-handle {
   width: 36px; height: 4px; background: rgba(255, 255, 255, 0.2);

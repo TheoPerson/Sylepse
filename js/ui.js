@@ -451,7 +451,12 @@ const UI = (() => {
 
     const modelName = ac.typeNameFormatted || ac.aircraftType || ac.typecode || 'Aéronef inconnu';
     const header = el('div', { className: 'sc-sheet-header' }, [
-      el('div', { className: 'sc-detail-header-info' }, [
+      el('button', {
+        className: 'sc-btn',
+        style: 'padding: 6px 12px; font-size: 11px; margin-right: 8px;',
+        onClick: closeSheet
+      }, [el('span', { textContent: '← Radar' })]),
+      el('div', { className: 'sc-detail-header-info', style: 'flex: 1;' }, [
         el('span', { className: 'sc-detail-sub', textContent: ac.operator || 'Opérateur privé / Inconnu' }),
         el('h3', { className: 'sc-sheet-title', textContent: modelName })
       ]),
