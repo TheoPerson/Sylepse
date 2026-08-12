@@ -4,7 +4,7 @@ Cette règle définit qui fait quoi et quand déléguer. Chargée automatiquemen
 
 ## Pourquoi cette structure et pas une autre
 
-SkyCheck est un projet à scope volontairement petit (single-page app, 3 intégrations API, pas de backend). Un swarm de 8-16 agents serait de l'overhead de coordination pur sans bénéfice réel — plus de temps passé à synchroniser qu'à produire. Mais un seul agent qui code ET se relit lui-même perd la valeur du regard indépendant, en particulier pour la vérification. La structure ci-dessous est le point d'équilibre : assez de séparation pour un vrai bénéfice de spécialisation et de double-regard, pas assez de agents pour créer de la friction de coordination sur un projet de cette taille.
+Sylepse est un projet à scope volontairement petit (single-page app, 3 intégrations API, pas de backend). Un swarm de 8-16 agents serait de l'overhead de coordination pur sans bénéfice réel — plus de temps passé à synchroniser qu'à produire. Mais un seul agent qui code ET se relit lui-même perd la valeur du regard indépendant, en particulier pour la vérification. La structure ci-dessous est le point d'équilibre : assez de séparation pour un vrai bénéfice de spécialisation et de double-regard, pas assez de agents pour créer de la friction de coordination sur un projet de cette taille.
 
 Si le projet grossit significativement (ex: Alan demande un backend, une couche de notifications, un vrai historique multi-device), cette structure doit être réévaluée — pas silencieusement patchée. Documenter la proposition de changement dans `PROGRESS.md` avant de l'appliquer.
 

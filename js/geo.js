@@ -32,7 +32,7 @@ const Geo = (() => {
         (err) => {
           switch (err.code) {
             case err.PERMISSION_DENIED:
-              reject(new Error('Accès à la position refusé. Autorise la géolocalisation pour utiliser SkyCheck.'));
+              reject(new Error('Accès à la position refusé. Autorise la géolocalisation pour utiliser Sylepse.'));
               break;
             case err.POSITION_UNAVAILABLE:
               reject(new Error('Position indisponible. Vérifie que le GPS est activé.'));

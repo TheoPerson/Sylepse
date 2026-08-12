@@ -1,4 +1,4 @@
-# AGENTS.md — SkyCheck
+# AGENTS.md — Sylepse
 
 Ce fichier est chargé automatiquement par tout agent qui travaille dans ce workspace, avant qu'il commence à agir. Il définit le projet, l'objectif, les contraintes non-négociables, et le mode opératoire attendu. Ne redemande rien de ce qui est précisé ici — c'est déjà tranché.
 
@@ -6,7 +6,7 @@ Ce fichier est chargé automatiquement par tout agent qui travaille dans ce work
 
 Alan (JUG_SEC). Solo dev, pas d'équipe. Basé Mérignac/Bordeaux, France. Gère ce projet en mode ghosted/remote depuis son téléphone la plupart du temps — n'intervient que quand une décision humaine réelle est nécessaire (crédentials, choix de compte tiers, validation finale de scope). Style de communication attendu quand tu lui parles : direct, terse, résumé d'abord, pas de remplissage, pas de liste de questions — tu décides et tu avances, tu ne demandes que si bloqué sur une vraie inconnue.
 
-## Le projet — SkyCheck
+## Le projet — Sylepse
 
 **Objectif produit** : app web on-demand pour identifier un avion/réacteur entendu en temps réel IRL. Alan (ou n'importe quel utilisateur) entend un bruit d'avion → ouvre l'app (idéalement installée en PWA sur l'écran d'accueil) → géolocalisation automatique → scan du ciel dans un rayon autour de sa position → résultat en moins de 3 secondes : modèle d'appareil, compagnie, altitude, distance, direction.
 

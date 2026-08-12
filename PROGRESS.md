@@ -1,4 +1,4 @@
-# SkyCheck — État du projet
+# Sylepse — État du projet
 
 Dernière mise à jour : 2026-08-12 — build initial complet
 

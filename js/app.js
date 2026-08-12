@@ -1,10 +1,10 @@
-// app.js — Orchestration SkyCheck V2 avec storage local (réglages + historique)
+// app.js — Orchestration Sylepse V2 avec storage local (réglages + historique)
 
 const App = (() => {
   'use strict';
 
-  const STORAGE_KEY_SETTINGS = 'skycheck_settings_v2';
-  const STORAGE_KEY_HISTORY = 'skycheck_history_v2';
+  const STORAGE_KEY_SETTINGS = 'sylepse_settings_v2';
+  const STORAGE_KEY_HISTORY = 'sylepse_history_v2';
 
   let settings = {
     radiusNM: 15,
@@ -21,7 +21,7 @@ const App = (() => {
         settings = { ...settings, ...JSON.parse(saved) };
       }
     } catch (e) {
-      console.warn('[SkyCheck] Erreur chargement réglages:', e);
+      console.warn('[Sylepse] Erreur chargement réglages:', e);
     }
   }
 
@@ -30,7 +30,7 @@ const App = (() => {
     try {
       localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(settings));
     } catch (e) {
-      console.warn('[SkyCheck] Erreur sauvegarde réglage:', e);
+      console.warn('[Sylepse] Erreur sauvegarde réglage:', e);
     }
     UI.setSettings(settings);
   }
@@ -58,7 +58,7 @@ const App = (() => {
     try {
       localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(updated));
     } catch (e) {
-      console.warn('[SkyCheck] Erreur sauvegarde historique:', e);
+      console.warn('[Sylepse] Erreur sauvegarde historique:', e);
     }
   }
 
@@ -88,7 +88,7 @@ const App = (() => {
         UI.renderEmpty(radiusToUse);
       }
     } catch (err) {
-      console.error('[SkyCheck]', err);
+      console.error('[Sylepse]', err);
       UI.renderError(err.message || 'Problème de connexion ou GPS.', () => runScan(customRadius));
     }
   }
