@@ -447,6 +447,8 @@ const UI = (() => {
     sheet.innerHTML = '';
     sheet.classList.add('sc-sheet-detail');
 
+    sheet.appendChild(el('div', { className: 'sc-sheet-handle' }));
+
     const modelName = ac.typeNameFormatted || ac.aircraftType || ac.typecode || 'Aéronef inconnu';
     const header = el('div', { className: 'sc-sheet-header' }, [
       el('div', { className: 'sc-detail-header-info' }, [
@@ -568,6 +570,8 @@ const UI = (() => {
 
     sheet.innerHTML = '';
     sheet.classList.remove('sc-sheet-detail');
+
+    sheet.appendChild(el('div', { className: 'sc-sheet-handle' }));
 
     if (type === 'history') {
       renderHistoryContent(sheet);

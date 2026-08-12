@@ -304,26 +304,33 @@ body::before {
 .sc-detail-actions { display: flex; flex-direction: column; gap: 8px; }
 
 /* ═══════════════════════════════════════════
-   MODAL STACKING CONTEXT — High Z-Index Lock
+   MODAL STACKING CONTEXT — High Z-Index Lock & Deep Backdrop
    ═══════════════════════════════════════════ */
 
 .sc-sheet-backdrop {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  position: fixed; inset: 0;
+  background: rgba(7, 8, 10, 0.92);
+  -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
   opacity: 0; pointer-events: none; transition: opacity 0.3s var(--ease);
-  z-index: 1999; /* Higher than map & dock */
+  z-index: 1999;
 }
 .sc-sheet-backdrop.is-open { opacity: 1; pointer-events: auto; }
 
 .sc-sheet {
   position: fixed; bottom: 0; left: 50%; transform: translateX(-50%) translateY(100%);
-  width: 100%; max-width: 480px; background: var(--bg-elevated);
-  border: 1px solid var(--border); border-top-left-radius: 20px; border-top-right-radius: 20px;
-  padding: 20px; transition: transform 0.35s var(--ease);
-  z-index: 2000; /* Highest priority layer */
-  max-height: 85vh; display: flex; flex-direction: column;
+  width: 100%; max-width: 480px; background: #0e1014;
+  border: 1px solid rgba(255,255,255,0.12); border-top-left-radius: 24px; border-top-right-radius: 24px;
+  padding: 12px 20px 24px; transition: transform 0.35s var(--ease);
+  z-index: 2000;
+  max-height: 90vh; display: flex; flex-direction: column;
+  box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.9);
 }
 .sc-sheet.is-open { transform: translateX(-50%) translateY(0); }
+
+.sc-sheet-handle {
+  width: 36px; height: 4px; background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px; margin: 0 auto 12px; flex-shrink: 0;
+}
 
 .sc-sheet-header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
 .sc-sheet-title { font-size: 16px; font-weight: 700; color: var(--text); }
