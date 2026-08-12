@@ -6,11 +6,11 @@
 
   *Hear a plane overhead → Open Sylepse → Zero-friction GPS geolocation → Real-time 3D airspace scan → Live aircraft model, photo, airline, altitude, and direction in under 3 seconds.*
 
-  [![Deploy Status](https://img.shields.io/netlify/5bd74650-cf90-4092-9be0-adc5500c7300?style=for-the-badge&logo=netlify&color=5eead4&labelColor=0e1014)](https://sylepse-sky.netlify.app)
-  [![Stack](https://img.shields.io/badge/Stack-Vanilla_ES6%2B_--_PWA-5eead4?style=for-the-badge&logo=javascript&labelColor=0e1014)](https://sylepse-sky.netlify.app)
+  [![Deploy Status](https://img.shields.io/netlify/8c994422-8421-4dfc-b0d9-ba10dddd12da?style=for-the-badge&logo=netlify&color=5eead4&labelColor=0e1014)](https://sylepse-v2-app.netlify.app)
+  [![Stack](https://img.shields.io/badge/Stack-Vanilla_ES6%2B_--_PWA-5eead4?style=for-the-badge&logo=javascript&labelColor=0e1014)](https://sylepse-v2-app.netlify.app)
   [![License](https://img.shields.io/badge/License-MIT-34d399?style=for-the-badge&labelColor=0e1014)](LICENSE)
 
-  [**Live App 🚀**](https://sylepse-sky.netlify.app) • [**Features**](#-features) • [**Architecture**](#-architecture) • [**Getting Started**](#-getting-started)
+  [**Live App 🚀**](https://sylepse-v2-app.netlify.app) • [**Features**](#-features) • [**Architecture**](#-architecture) • [**Getting Started**](#-getting-started)
 
 </div>
 
