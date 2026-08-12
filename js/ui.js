@@ -1,5 +1,5 @@
-// ui.js — V3.2 UI Controller avec Icônes Vectorielles SVG et Barre de Navigation Segmentée
-// Startup-Grade 2026
+// ui.js — V3.3 View State Machine & Always-Interactive Map Architecture
+// Direct fix for zero-aircraft view switching and interactive map rendering
 
 const UI = (() => {
   'use strict';
@@ -7,10 +7,12 @@ const UI = (() => {
   const app = document.getElementById('app');
 
   let currentMode = 'list'; // 'list' | 'map'
+  let currentState = 'loading'; // 'loading' | 'results' | 'empty' | 'error'
   let currentAircraftList = [];
   let currentSource = 'airplanes.live';
   let currentRadius = 15;
   let currentPos = null;
+  let lastErrorMessage = '';
   let currentSettings = { radiusNM: 15, unitDist: 'km', unitAlt: 'ft' };
 
   let handlers = {
@@ -21,7 +23,6 @@ const UI = (() => {
     onClearHistory: null
   };
 
-  // SVGs Vectoriels Propres
   const SVGS = {
     sparkles: `<svg viewBox="0 0 24 24"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>`,
     zap: `<svg viewBox="0 0 24 24"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z"/></svg>`,
@@ -71,10 +72,10 @@ const UI = (() => {
       el('div', { className: 'sc-brand' }, [
         el('span', { className: 'sc-logo-svg', innerHTML: SVGS.sparkles }),
         el('h1', { className: 'sc-title' }, [
-          'SkyCheck',
+          'Sylepse',
           el('span', { className: 'sc-title-dot' })
         ]),
-        el('span', { id: 'sc-header-badge', className: 'sc-count', textContent: '15 NM' })
+        el('span', { id: 'sc-header-badge', className: 'sc-count', textContent: `${currentSettings.radiusNM} NM` })
       ]),
       el('div', { className: 'sc-header-actions' }, [
         el('button', {
@@ -92,7 +93,6 @@ const UI = (() => {
 
     const viewContainer = el('main', { id: 'sc-view', className: 'sc-view-container' });
 
-    // Barre Segmentée avec Icônes Vectorielles et États Actifs
     const dock = el('nav', { className: 'sc-dock' }, [
       el('button', {
         id: 'sc-dock-scan',
@@ -163,6 +163,10 @@ const UI = (() => {
     }
   }
 
+  // ────────────────────────────────────────────
+  //  View Switcher (Fix critique : Re-rend toujours la vue demandée)
+  // ────────────────────────────────────────────
+
   function setViewMode(mode) {
     currentMode = mode;
     const btnList = document.getElementById('sc-dock-btn-list');
@@ -171,16 +175,148 @@ const UI = (() => {
     if (btnList) btnList.classList.toggle('is-active', mode === 'list');
     if (btnMap) btnMap.classList.toggle('is-active', mode === 'map');
 
-    if (currentAircraftList.length > 0) {
-      renderResults(currentAircraftList, currentSource, currentRadius);
+    // Ré-exécuter le rendu selon le mode courant
+    renderCurrentModeView();
+  }
+
+  function renderCurrentModeView() {
+    if (currentState === 'loading') return;
+    if (currentState === 'error') {
+      renderErrorView(lastErrorMessage, () => handlers.onScan && handlers.onScan());
+      return;
+    }
+
+    if (currentMode === 'map') {
+      renderMapView();
+    } else {
+      if (currentAircraftList.length > 0) {
+        renderListView();
+      } else {
+        renderEmptyView(currentRadius);
+      }
     }
   }
 
   // ────────────────────────────────────────────
-  //  Rendu des états
+  //  Vues individuelles (Carte, Liste, Empty, Loading, Error)
   // ────────────────────────────────────────────
 
+  function renderMapView() {
+    setScanButtonState(false);
+    updateBadge(`${currentAircraftList.length} actif${currentAircraftList.length > 1 ? 's' : ''}`);
+    const view = getViewContainer();
+    view.innerHTML = '';
+
+    // Meta bar
+    const metaBar = el('div', { className: 'sc-meta' }, [
+      el('span', { textContent: `Rayon ${currentRadius} NM` }),
+      el('span', { className: 'sc-meta-sep' }),
+      el('span', { className: 'sc-meta-accent', textContent: `Source: ${currentSource}` }),
+      el('span', { className: 'sc-meta-sep' }),
+      el('span', { textContent: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })
+    ]);
+    view.appendChild(metaBar);
+
+    // Conteneur de carte Leaflet toujours rendu
+    const mapContainer = el('div', { id: 'sc-map', className: 'sc-map-container' });
+    view.appendChild(mapContainer);
+
+    // Banner overlay si 0 avion
+    if (currentAircraftList.length === 0) {
+      const emptyBanner = el('div', { className: 'sc-map-overlay-banner' }, [
+        el('span', { textContent: '✦ Radar actif — Aucun aéronef détecté à portée (15 NM)' })
+      ]);
+      view.appendChild(emptyBanner);
+    }
+
+    const lat = currentPos ? currentPos.lat : 44.8378; // Bordeaux fallback default
+    const lon = currentPos ? currentPos.lon : -0.5792;
+
+    SkyMap.init('sc-map', lat, lon, currentRadius, (ac) => {
+      openAircraftDetailSheet(ac);
+    });
+    SkyMap.updateAircraft(currentAircraftList);
+  }
+
+  function renderListView() {
+    setScanButtonState(false);
+    updateBadge(`${currentAircraftList.length} actif${currentAircraftList.length > 1 ? 's' : ''}`);
+    const view = getViewContainer();
+    view.innerHTML = '';
+
+    const metaBar = el('div', { className: 'sc-meta' }, [
+      el('span', { textContent: `Rayon ${currentRadius} NM` }),
+      el('span', { className: 'sc-meta-sep' }),
+      el('span', { className: 'sc-meta-accent', textContent: `Source: ${currentSource}` }),
+      el('span', { className: 'sc-meta-sep' }),
+      el('span', { textContent: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })
+    ]);
+    view.appendChild(metaBar);
+
+    const list = el('div', { className: 'sc-list' });
+    currentAircraftList.forEach((ac, i) => {
+      list.appendChild(buildAircraftCard(ac, i));
+    });
+    view.appendChild(list);
+
+    requestAnimationFrame(() => {
+      list.querySelectorAll('.sc-card').forEach((card, i) => {
+        card.style.animationDelay = `${i * 50}ms`;
+        card.classList.add('sc-card-in');
+      });
+    });
+  }
+
+  function renderEmptyView(radiusNM) {
+    setScanButtonState(false);
+    updateBadge('0 actif');
+    const view = getViewContainer();
+    view.innerHTML = '';
+
+    view.appendChild(
+      el('div', { className: 'sc-empty' }, [
+        el('div', { className: 'sc-empty-visual' }, [
+          el('div', { className: 'sc-empty-circle' }),
+          el('div', { className: 'sc-empty-icon', textContent: '✦' })
+        ]),
+        el('h2', { className: 'sc-empty-title', textContent: 'Aucun appareil en rayon ADS-B' }),
+        el('p', { className: 'sc-empty-body', innerHTML: `Aucun transpondeur actif détecté dans les <strong>${radiusNM} NM (~${Math.round(radiusNM * 1.852)} km)</strong>.` }),
+
+        el('div', { className: 'sc-empty-reasons' }, [
+          el('div', { className: 'sc-reason' }, [
+            el('span', { className: 'sc-reason-icon', textContent: '🚁' }),
+            el('span', { textContent: 'Hélicoptère à basse altitude (transpondeur souvent inactif)' })
+          ]),
+          el('div', { className: 'sc-reason' }, [
+            el('span', { className: 'sc-reason-icon', textContent: '✈️' }),
+            el('span', { textContent: 'Vol militaire ou gouvernemental restreint' })
+          ]),
+          el('div', { className: 'sc-reason' }, [
+            el('span', { className: 'sc-reason-icon', textContent: '🛸' }),
+            el('span', { textContent: 'Drone léger non équipé ADS-B Out' })
+          ])
+        ]),
+
+        el('div', { className: 'sc-empty-actions' }, [
+          el('button', {
+            className: 'sc-btn sc-btn-lg',
+            onClick: () => handlers.onExpandRadius && handlers.onExpandRadius(30)
+          }, [
+            el('span', { textContent: '🔍 Élargir à 30 NM (~55 km)' })
+          ]),
+          el('button', {
+            className: 'sc-btn',
+            onClick: () => setViewMode('map')
+          }, [
+            el('span', { textContent: '🗺️ Voir le Radar Sombre en direct' })
+          ])
+        ])
+      ])
+    );
+  }
+
   function renderLoading(message = 'Localisation en cours…') {
+    currentState = 'loading';
     setScanButtonState(true);
     const view = getViewContainer();
     view.innerHTML = '';
@@ -208,47 +344,42 @@ const UI = (() => {
   }
 
   function renderResults(aircraft, source, radiusNM) {
-    setScanButtonState(false);
     currentAircraftList = aircraft;
     currentSource = source;
     currentRadius = radiusNM;
-    updateBadge(`${aircraft.length} actif${aircraft.length > 1 ? 's' : ''}`);
+    currentState = aircraft.length > 0 ? 'results' : 'empty';
+    renderCurrentModeView();
+  }
+
+  function renderEmpty(radiusNM) {
+    currentAircraftList = [];
+    currentRadius = radiusNM;
+    currentState = 'empty';
+    renderCurrentModeView();
+  }
+
+  function renderError(message, onRetry) {
+    currentState = 'error';
+    lastErrorMessage = message;
+    renderErrorView(message, onRetry);
+  }
+
+  function renderErrorView(message, onRetry) {
+    setScanButtonState(false);
+    updateBadge('Erreur');
     const view = getViewContainer();
     view.innerHTML = '';
 
-    const metaBar = el('div', { className: 'sc-meta' }, [
-      el('span', { textContent: `Rayon ${radiusNM} NM` }),
-      el('span', { className: 'sc-meta-sep' }),
-      el('span', { className: 'sc-meta-accent', textContent: `Source: ${source}` }),
-      el('span', { className: 'sc-meta-sep' }),
-      el('span', { textContent: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) })
-    ]);
-    view.appendChild(metaBar);
-
-    if (currentMode === 'map') {
-      const mapContainer = el('div', { id: 'sc-map', className: 'sc-map-container' });
-      view.appendChild(mapContainer);
-
-      if (currentPos) {
-        SkyMap.init('sc-map', currentPos.lat, currentPos.lon, radiusNM, (ac) => {
-          openAircraftDetailSheet(ac);
-        });
-        SkyMap.updateAircraft(aircraft);
-      }
-    } else {
-      const list = el('div', { className: 'sc-list' });
-      aircraft.forEach((ac, i) => {
-        list.appendChild(buildAircraftCard(ac, i));
-      });
-      view.appendChild(list);
-
-      requestAnimationFrame(() => {
-        list.querySelectorAll('.sc-card').forEach((card, i) => {
-          card.style.animationDelay = `${i * 50}ms`;
-          card.classList.add('sc-card-in');
-        });
-      });
-    }
+    view.appendChild(
+      el('div', { className: 'sc-error' }, [
+        el('div', { className: 'sc-error-visual', textContent: '!' }),
+        el('h2', { className: 'sc-error-title', textContent: 'Signal GPS ou Réseau indisponible' }),
+        el('p', { className: 'sc-error-desc', textContent: message }),
+        el('button', { className: 'sc-btn sc-btn-lg', onClick: onRetry }, [
+          el('span', { textContent: 'Réessayer le scan' })
+        ])
+      ])
+    );
   }
 
   function buildAircraftCard(ac) {
@@ -318,66 +449,6 @@ const UI = (() => {
       el('span', { className: 'sc-cell-label', textContent: label }),
       el('span', { className: 'sc-cell-val', textContent: value })
     ]);
-  }
-
-  function renderEmpty(radiusNM) {
-    setScanButtonState(false);
-    updateBadge('0 actif');
-    const view = getViewContainer();
-    view.innerHTML = '';
-
-    view.appendChild(
-      el('div', { className: 'sc-empty' }, [
-        el('div', { className: 'sc-empty-visual' }, [
-          el('div', { className: 'sc-empty-circle' }),
-          el('div', { className: 'sc-empty-icon', textContent: '✦' })
-        ]),
-        el('h2', { className: 'sc-empty-title', textContent: 'Aucun appareil en rayon ADS-B' }),
-        el('p', { className: 'sc-empty-body', innerHTML: `Aucun transpondeur actif détecté dans les <strong>${radiusNM} NM (~${Math.round(radiusNM * 1.852)} km)</strong>.` }),
-
-        el('div', { className: 'sc-empty-reasons' }, [
-          el('div', { className: 'sc-reason' }, [
-            el('span', { className: 'sc-reason-icon', textContent: '🚁' }),
-            el('span', { textContent: 'Hélicoptère à basse altitude (transpondeur souvent inactif)' })
-          ]),
-          el('div', { className: 'sc-reason' }, [
-            el('span', { className: 'sc-reason-icon', textContent: '✈️' }),
-            el('span', { textContent: 'Vol militaire ou gouvernemental restreint' })
-          ]),
-          el('div', { className: 'sc-reason' }, [
-            el('span', { className: 'sc-reason-icon', textContent: '🛸' }),
-            el('span', { textContent: 'Drone léger non équipé ADS-B Out' })
-          ])
-        ]),
-
-        el('div', { className: 'sc-empty-actions' }, [
-          el('button', {
-            className: 'sc-btn sc-btn-lg',
-            onClick: () => handlers.onExpandRadius && handlers.onExpandRadius(30)
-          }, [
-            el('span', { textContent: '🔍 Élargir à 30 NM (~55 km)' })
-          ])
-        ])
-      ])
-    );
-  }
-
-  function renderError(message, onRetry) {
-    setScanButtonState(false);
-    updateBadge('Erreur');
-    const view = getViewContainer();
-    view.innerHTML = '';
-
-    view.appendChild(
-      el('div', { className: 'sc-error' }, [
-        el('div', { className: 'sc-error-visual', textContent: '!' }),
-        el('h2', { className: 'sc-error-title', textContent: 'Signal GPS ou Réseau indisponible' }),
-        el('p', { className: 'sc-error-desc', textContent: message }),
-        el('button', { className: 'sc-btn sc-btn-lg', onClick: onRetry }, [
-          el('span', { textContent: 'Réessayer le scan' })
-        ])
-      ])
-    );
   }
 
   // ────────────────────────────────────────────
@@ -479,7 +550,7 @@ const UI = (() => {
         className: 'sc-btn sc-btn-lg',
         onClick: () => {
           closeSheet();
-          if (currentMode !== 'map') setViewMode('map');
+          setViewMode('map');
           if (currentPos) SkyMap.centerOn(ac.lat, ac.lon, 12);
         }
       }, [el('span', { textContent: '🎯 Centrer sur la Carte Radar' })])
@@ -572,7 +643,7 @@ const UI = (() => {
 
   function renderSettingsContent(container) {
     const header = el('div', { className: 'sc-sheet-header' }, [
-      el('h3', { className: 'sc-sheet-title', textContent: 'Réglages de SkyCheck' }),
+      el('h3', { className: 'sc-sheet-title', textContent: 'Réglages de Sylepse' }),
       el('button', { className: 'sc-sheet-close', onClick: closeSheet, textContent: '✕' })
     ]);
 
