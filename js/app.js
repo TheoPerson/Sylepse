@@ -68,7 +68,11 @@ const App = (() => {
     } catch (e) {}
   }
 
+  let isScanning = false;
+
   async function runScan(customRadius = null) {
+    if (isScanning) return;
+    isScanning = true;
     const radiusToUse = customRadius || settings.radiusNM;
 
     try {
@@ -90,6 +94,8 @@ const App = (() => {
     } catch (err) {
       console.error('[Sylepse]', err);
       UI.renderError(err.message || 'Problème de connexion ou GPS.', () => runScan(customRadius));
+    } finally {
+      isScanning = false;
     }
   }
 

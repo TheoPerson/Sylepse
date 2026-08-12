@@ -475,7 +475,9 @@ const UI = (() => {
       Api.fetchAircraftPhoto(ac.registration).then(photo => {
         if (photo && photo.thumbnail) {
           photoContainer.innerHTML = '';
-          photoContainer.appendChild(el('img', { src: photo.thumbnail, alt: modelName, className: 'sc-ac-img' }));
+          const imgEl = el('img', { src: photo.thumbnail, alt: modelName, className: 'sc-ac-img' });
+          imgEl.onerror = () => renderVectorBlueprintFallback(photoContainer, modelName, ac.registration);
+          photoContainer.appendChild(imgEl);
           if (photo.photographer) {
             photoContainer.appendChild(el('span', { className: 'sc-photo-credit', textContent: `© ${photo.photographer} (Planespotters.net)` }));
           }
@@ -701,9 +703,29 @@ const UI = (() => {
       }))
     ]);
 
+    const audioGroup = el('div', { className: 'sc-setting-group' }, [
+      el('label', { className: 'sc-setting-label', textContent: 'Radar Sonore (Web Audio)' }),
+      el('div', { className: 'sc-pill-selector' }, [true, false].map(isEnabled => {
+        const currentlyEnabled = typeof SoundEngine !== 'undefined' ? SoundEngine.isEnabled() : false;
+        const active = currentlyEnabled === isEnabled ? 'is-active' : '';
+        return el('button', {
+          className: `sc-pill-opt ${active}`,
+          onClick: () => {
+            if (typeof SoundEngine !== 'undefined') {
+              if (SoundEngine.isEnabled() !== isEnabled) {
+                SoundEngine.toggle();
+                renderSettingsContent(container);
+              }
+            }
+          }
+        }, [el('span', { textContent: isEnabled ? '🔔 Activé' : '🔕 Muet' })]);
+      }))
+    ]);
+
     body.appendChild(radiusGroup);
     body.appendChild(distGroup);
     body.appendChild(altGroup);
+    body.appendChild(audioGroup);
 
     container.appendChild(header);
     container.appendChild(body);
