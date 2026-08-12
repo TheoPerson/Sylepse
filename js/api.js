@@ -41,9 +41,9 @@ const Api = (() => {
   // ────────────────────────────────────────────
 
   async function fetchAirplanesLive(lat, lon, radiusNM = DEFAULT_RADIUS_NM) {
-    const url = `https://api.airplanes.live/v2/point/${lat}/${lon}/${radiusNM}`;
+    const url = `https://api.adsb.lol/v2/point/${lat}/${lon}/${radiusNM}`;
     const res = await fetchWithTimeout(url);
-    if (!res.ok) throw new Error(`airplanes.live HTTP ${res.status}`);
+    if (!res.ok) throw new Error(`adsb.lol HTTP ${res.status}`);
     const data = await res.json();
     return (data.ac || []).map(ac => normalizeAirplanesLive(ac, lat, lon));
   }
@@ -88,7 +88,7 @@ const Api = (() => {
       distKm: distKm,
       bearingDeg: dir,
       bearingLabel: dir != null ? Geo.bearingLabel(dir) : null,
-      source: 'airplanes.live',
+      source: 'adsb.lol',
       timestamp: Date.now(),
       _raw: ac
     };
