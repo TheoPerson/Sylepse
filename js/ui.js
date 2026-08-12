@@ -1,5 +1,4 @@
-// ui.js — V3.3 View State Machine & Always-Interactive Map Architecture
-// Direct fix for zero-aircraft view switching and interactive map rendering
+// ui.js — V4 UI Controller avec Stacking Context Ultra-Strict & Zero-Overlap Typography
 
 const UI = (() => {
   'use strict';
@@ -29,7 +28,8 @@ const UI = (() => {
     list: `<svg viewBox="0 0 24 24"><path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
     map: `<svg viewBox="0 0 24 24"><path d="M9 20L3 17V4L9 7M9 20L15 17M9 20V7M15 17L21 20V7L15 4M15 17V4M9 7L15 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
     history: `<svg viewBox="0 0 24 24"><path d="M12 8V12L15 15M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C14.8273 3 17.35 4.30367 19 6.34267M19 6.34267V3M19 6.34267H15.6569" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`,
-    settings: `<svg viewBox="0 0 24 24"><path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15A1.65 1.65 0 0 0 20 12A1.65 1.65 0 0 0 19.4 9L21 7.4L19.6 6L18 7.6A1.65 1.65 0 0 0 15 7A1.65 1.65 0 0 0 12 6.4L12 4.2L10 4.2L10 6.4A1.65 1.65 0 0 0 7 7A1.65 1.65 0 0 0 5.4 7.6L3.8 6L2.4 7.4L4 9A1.65 1.65 0 0 0 3.4 12A1.65 1.65 0 0 0 4 15L2.4 16.6L3.8 18L5.4 16.4A1.65 1.65 0 0 0 7 17A1.65 1.65 0 0 0 10 17.6L10 19.8L12 19.8L12 17.6A1.65 1.65 0 0 0 15 17A1.65 1.65 0 0 0 16.6 16.4L18.2 18L19.6 16.6L18 15Z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`
+    settings: `<svg viewBox="0 0 24 24"><path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15A1.65 1.65 0 0 0 20 12A1.65 1.65 0 0 0 19.4 9L21 7.4L19.6 6L18 7.6A1.65 1.65 0 0 0 15 7A1.65 1.65 0 0 0 12 6.4L12 4.2L10 4.2L10 6.4A1.65 1.65 0 0 0 7 7A1.65 1.65 0 0 0 5.4 7.6L3.8 6L2.4 7.4L4 9A1.65 1.65 0 0 0 3.4 12A1.65 1.65 0 0 0 4 15L2.4 16.6L3.8 18L5.4 16.4A1.65 1.65 0 0 0 7 17A1.65 1.65 0 0 0 10 17.6L10 19.8L12 19.8L12 17.6A1.65 1.65 0 0 0 15 17A1.65 1.65 0 0 0 16.6 16.4L18.2 18L19.6 16.6L18 15Z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>`,
+    planeBlueprint: `<svg viewBox="0 0 100 60" class="sc-blueprint-svg"><path d="M50 5 L55 20 L95 38 L95 42 L55 35 L53 50 L62 55 L62 58 L50 56 L38 58 L38 55 L47 50 L45 35 L5 42 L5 38 L45 20 Z" fill="none" stroke="#5eead4" stroke-width="1.2" opacity="0.6"/><circle cx="50" cy="30" r="25" fill="none" stroke="#5eead4" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.3"/></svg>`
   };
 
   function init(eventHandlers) {
@@ -60,10 +60,6 @@ const UI = (() => {
     });
     return node;
   }
-
-  // ────────────────────────────────────────────
-  //  Shell Persistant
-  // ────────────────────────────────────────────
 
   function renderShell() {
     app.innerHTML = '';
@@ -163,10 +159,6 @@ const UI = (() => {
     }
   }
 
-  // ────────────────────────────────────────────
-  //  View Switcher (Fix critique : Re-rend toujours la vue demandée)
-  // ────────────────────────────────────────────
-
   function setViewMode(mode) {
     currentMode = mode;
     const btnList = document.getElementById('sc-dock-btn-list');
@@ -175,7 +167,6 @@ const UI = (() => {
     if (btnList) btnList.classList.toggle('is-active', mode === 'list');
     if (btnMap) btnMap.classList.toggle('is-active', mode === 'map');
 
-    // Ré-exécuter le rendu selon le mode courant
     renderCurrentModeView();
   }
 
@@ -197,17 +188,12 @@ const UI = (() => {
     }
   }
 
-  // ────────────────────────────────────────────
-  //  Vues individuelles (Carte, Liste, Empty, Loading, Error)
-  // ────────────────────────────────────────────
-
   function renderMapView() {
     setScanButtonState(false);
     updateBadge(`${currentAircraftList.length} actif${currentAircraftList.length > 1 ? 's' : ''}`);
     const view = getViewContainer();
     view.innerHTML = '';
 
-    // Meta bar
     const metaBar = el('div', { className: 'sc-meta' }, [
       el('span', { textContent: `Rayon ${currentRadius} NM` }),
       el('span', { className: 'sc-meta-sep' }),
@@ -217,11 +203,9 @@ const UI = (() => {
     ]);
     view.appendChild(metaBar);
 
-    // Conteneur de carte Leaflet toujours rendu
-    const mapContainer = el('div', { id: 'sc-map', className: 'sc-map-container' });
+    const mapContainer = el('div', { id: 'sc-main-map', className: 'sc-map-container' });
     view.appendChild(mapContainer);
 
-    // Banner overlay si 0 avion
     if (currentAircraftList.length === 0) {
       const emptyBanner = el('div', { className: 'sc-map-overlay-banner' }, [
         el('span', { textContent: '✦ Radar actif — Aucun aéronef détecté à portée (15 NM)' })
@@ -229,10 +213,10 @@ const UI = (() => {
       view.appendChild(emptyBanner);
     }
 
-    const lat = currentPos ? currentPos.lat : 44.8378; // Bordeaux fallback default
+    const lat = currentPos ? currentPos.lat : 44.8378;
     const lon = currentPos ? currentPos.lon : -0.5792;
 
-    SkyMap.init('sc-map', lat, lon, currentRadius, (ac) => {
+    SkyMap.init('sc-main-map', lat, lon, currentRadius, (ac) => {
       openAircraftDetailSheet(ac);
     });
     SkyMap.updateAircraft(currentAircraftList);
@@ -452,7 +436,7 @@ const UI = (() => {
   }
 
   // ────────────────────────────────────────────
-  //  Fiche Passionné d'Aviation
+  //  Fiche Passionné d'Aviation (Aircraft Detail Sheet)
   // ────────────────────────────────────────────
 
   async function openAircraftDetailSheet(ac) {
@@ -474,8 +458,9 @@ const UI = (() => {
 
     const body = el('div', { className: 'sc-sheet-body' });
 
-    const photoContainer = el('div', { className: 'sc-photo-card' }, [
-      el('div', { className: 'sc-photo-loading', textContent: 'Chargement de la photo spotter...' })
+    // Conteneur de photo / illustration vectorielle garanti sans fuite de DOM
+    const photoContainer = el('div', { id: 'sc-detail-photo-card', className: 'sc-photo-card' }, [
+      el('div', { className: 'sc-photo-loading', textContent: 'Recherche de la photo spotter...' })
     ]);
     body.appendChild(photoContainer);
 
@@ -488,11 +473,11 @@ const UI = (() => {
             photoContainer.appendChild(el('span', { className: 'sc-photo-credit', textContent: `© ${photo.photographer} (Planespotters.net)` }));
           }
         } else {
-          photoContainer.innerHTML = `<div class="sc-photo-placeholder"><span>✈</span><p>Aucune photo d'immatriculation (${ac.registration})</p></div>`;
+          renderVectorBlueprintFallback(photoContainer, modelName, ac.registration);
         }
       });
     } else {
-      photoContainer.innerHTML = `<div class="sc-photo-placeholder"><span>✈</span><p>Immatriculation non transmise en ADS-B</p></div>`;
+      renderVectorBlueprintFallback(photoContainer, modelName, ac.icao24.toUpperCase());
     }
 
     const altFt = ac.altFeet != null ? `${Math.round(ac.altFeet).toLocaleString()} ft` : 'Non disponible';
@@ -562,6 +547,18 @@ const UI = (() => {
 
     backdrop.classList.add('is-open');
     sheet.classList.add('is-open');
+  }
+
+  function renderVectorBlueprintFallback(container, title, subtitle) {
+    container.innerHTML = `
+      <div class="sc-blueprint-card">
+        ${SVGS.planeBlueprint}
+        <div class="sc-blueprint-text">
+          <span class="sc-blueprint-title">${title}</span>
+          <span class="sc-blueprint-sub">Identifiant ADS-B: ${subtitle}</span>
+        </div>
+      </div>
+    `;
   }
 
   function openSheet(type) {

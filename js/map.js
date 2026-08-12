@@ -1,5 +1,5 @@
 // map.js — Carte Radar Sombre intégrée (Leaflet + CartoDB Dark Matter)
-// Module SkyMap pour Sylepse SkyCheck
+// Module SkyMap pour Sylepse V4
 
 const SkyMap = (() => {
   'use strict';
@@ -8,25 +8,22 @@ const SkyMap = (() => {
   let userMarker = null;
   let radiusCircle = null;
   let aircraftMarkers = {};
+  let targetMarker = null;
   let onAircraftSelectCallback = null;
 
-  /**
-   * Initialise la carte Leaflet dans l'élément donné.
-   */
   function init(elementId, lat, lon, radiusNM = 15, onSelect) {
     onAircraftSelectCallback = onSelect;
 
     const container = document.getElementById(elementId);
     if (!container) return;
 
-    // Destroy existing instance if any
     if (map) {
       map.remove();
       map = null;
       aircraftMarkers = {};
+      targetMarker = null;
     }
 
-    // Centrer sur la position GPS
     map = L.map(elementId, {
       center: [lat, lon],
       zoom: radiusNM <= 15 ? 10 : radiusNM <= 25 ? 9 : 8,
@@ -34,13 +31,11 @@ const SkyMap = (() => {
       attributionControl: false
     });
 
-    // Tuiles CartoDB Dark Matter (Black & Cyan aesthetic)
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       maxZoom: 18,
       subdomains: 'abcd'
     }).addTo(map);
 
-    // Marqueur GPS Utilisateur avec aura pulsante
     const userIcon = L.divIcon({
       className: 'sc-map-user-marker',
       html: `<div class="sc-user-dot"></div><div class="sc-user-pulse"></div>`,
@@ -49,7 +44,6 @@ const SkyMap = (() => {
     });
     userMarker = L.marker([lat, lon], { icon: userIcon }).addTo(map);
 
-    // Cercle de rayon de scan (en mètres)
     const radiusMeters = radiusNM * 1852;
     radiusCircle = L.circle([lat, lon], {
       radius: radiusMeters,
@@ -61,21 +55,16 @@ const SkyMap = (() => {
       dashArray: '4, 8'
     }).addTo(map);
 
-    // Invalider la taille après l'animation de rendu
     setTimeout(() => {
       if (map) map.invalidateSize();
-    }, 200);
+    }, 250);
   }
 
-  /**
-   * Met à jour les marqueurs d'avions sur la carte.
-   */
   function updateAircraft(aircraftList) {
     if (!map) return;
 
     const currentHexes = new Set(aircraftList.map(a => a.icao24));
 
-    // Supprimer les marqueurs obsolètes
     Object.keys(aircraftMarkers).forEach(hex => {
       if (!currentHexes.has(hex)) {
         map.removeLayer(aircraftMarkers[hex]);
@@ -83,13 +72,12 @@ const SkyMap = (() => {
       }
     });
 
-    // Ajouter ou mettre à jour les marqueurs
     aircraftList.forEach(ac => {
       if (ac.lat == null || ac.lon == null) return;
 
       const trackDeg = ac.track != null ? ac.track : (ac.bearingDeg || 0);
       const isAudible = ac.audibility && (ac.audibility.level === 'high' || ac.audibility.level === 'medium');
-      const markerColor = isAudible ? '#34d399' : (ac.audibility && ac.audibility.level === 'low') ? '#fb923c' : '#565c6a';
+      const markerColor = isAudible ? '#34d399' : (ac.audibility && ac.audibility.level === 'low') ? '#fb923c' : '#6b7280';
 
       const iconHtml = `
         <div class="sc-ac-marker" style="transform: rotate(${trackDeg}deg);">
@@ -97,7 +85,7 @@ const SkyMap = (() => {
             <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
           </svg>
         </div>
-        <div class="sc-ac-label">${ac.callsign || ac.aircraftType || ac.icao24.toUpperCase()}</div>
+        <div class="sc-ac-label">${ac.callsign || ac.typeNameFormatted || ac.icao24.toUpperCase()}</div>
       `;
 
       const acIcon = L.divIcon({
@@ -122,7 +110,27 @@ const SkyMap = (() => {
 
   function centerOn(lat, lon, zoom = 12) {
     if (map) {
-      map.flyTo([lat, lon], zoom, { duration: 1.2 });
+      map.flyTo([lat, lon], zoom, { duration: 1.5 });
+
+      if (targetMarker) {
+        map.removeLayer(targetMarker);
+        targetMarker = null;
+      }
+
+      const targetIcon = L.divIcon({
+        className: 'sc-target-ring-marker',
+        html: `<div class="sc-target-ring"></div>`,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
+      });
+
+      targetMarker = L.marker([lat, lon], { icon: targetIcon }).addTo(map);
+      setTimeout(() => {
+        if (targetMarker && map) {
+          map.removeLayer(targetMarker);
+          targetMarker = null;
+        }
+      }, 4000);
     }
   }
 
